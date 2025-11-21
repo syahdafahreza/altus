@@ -1,0 +1,47 @@
+name: Build Windows Exe
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Memungkinkan trigger manual
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    permissions:
+      contents: read
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Gunakan versi LTS terbaru
+          cache: 'yarn'
+
+      - name: Enable Corepack (for Yarn 4)
+        run: corepack enable
+
+      - name: Install Dependencies
+        # Menggunakan immutable untuk memastikan lockfile dipatuhi
+        run: yarn install --immutable
+
+      - name: Build & Make (.exe)
+        # Menjalankan script 'make' dari package.json yang memicu electron-forge make
+        run: yarn make
+
+      - name: List Output Files (Debugging)
+        run: Get-ChildItem -Recurse out/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Altus-Windows-Installer
+          # Mengambil file exe dari folder output default Electron Forge
+          path: out/make/**/*.exe
+          if-no-files-found: error
