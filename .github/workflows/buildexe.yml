@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Memungkinkan trigger manual
+  workflow_dispatch:
 
 jobs:
   build-windows:
@@ -21,27 +21,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Gunakan versi LTS terbaru
-          cache: 'yarn'
+          node-version: 20
+          # Baris cache dihapus untuk menghindari error "packageManager mismatch"
+          # cache: 'yarn' 
 
-      - name: Enable Corepack (for Yarn 4)
+      - name: Enable Corepack (Activating Yarn 4)
         run: corepack enable
 
       - name: Install Dependencies
-        # Menggunakan immutable untuk memastikan lockfile dipatuhi
+        # --immutable memastikan lockfile tidak berubah di CI
         run: yarn install --immutable
 
       - name: Build & Make (.exe)
-        # Menjalankan script 'make' dari package.json yang memicu electron-forge make
         run: yarn make
 
       - name: List Output Files (Debugging)
+        # Menampilkan isi folder out untuk memastikan file .exe terbentuk
         run: Get-ChildItem -Recurse out/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Altus-Windows-Installer
-          # Mengambil file exe dari folder output default Electron Forge
           path: out/make/**/*.exe
           if-no-files-found: error
